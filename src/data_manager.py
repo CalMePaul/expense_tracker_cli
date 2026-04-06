@@ -9,18 +9,28 @@ cursor.execute("""
         id          INTEGER PRIMARY KEY AUTOINCREMENT,
         name        TEXT    NOT NULL,
         amount      REAL    NOT NULL,
+        status      TEXT    NOT NULL,
         category    TEXT,
-        date        TEXT    NOT NULL
+        necessary   TEXT    NOT NULL,
+        created_date        TEXT    NOT NULL,
+        updated_date        TEXT    NOT NULL,
     )
 """)
 conn.commit()
 
-def save_new_expense(description, amount, necessity, category, date):
+def new_expense(description, amount, status, necessary, category, created_date, updated_date):
     """Add the new expense to the database."""
 
     cursor.execute(
-        "INSERT INTO expenses (name, amount, necessity, category, date) VALUES (?, ?, ?, ?, ?)",
-        (description, amount, necessity, category, date)
+        "INSERT INTO expenses (name, amount, status, necessary, category, created_date, updated_date) VALUES (?, ?, ?, ?, ?)",
+        (description, amount, status, necessary, category, created_date, updated_date)
     )
 
     conn.commit()
+
+def update_expense(expense, description, amount, status, necessary, category, updatedAt):
+    """Update an existing expense."""
+
+    cursor.execute(
+        ""
+    )

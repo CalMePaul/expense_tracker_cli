@@ -2,7 +2,14 @@ import typer
 from enum import Enum
 from datetime import datetime, date
 
+import src.data_manager as data_manager
+
 app = typer.Typer(no_args_is_help=True)
+
+class Status(str, Enum):
+    planned = "planned"
+    in_progress = "in_progress"
+    done = "done"
 
 class Category(str, Enum):
     food = "food"
@@ -24,21 +31,32 @@ class Time_window(str, Enum):
 def add(
     description: str = typer.Argument(..., help="Description of the expense"),
     amount: str = typer.Argument(..., help="Amount spent"),
-    necessity: bool = typer.Argument(..., help="Whether the expense was necessary"),
+    status: str = typer.Option(Status.done, "--status", "--s"),
+    necessary: bool = typer.Argument(..., help="Whether the expense was necessary"),
     category: Category = typer.Option(Category.other, "--category", "-c"),
 ):
     """Add an expense to the tracker."""
 
     createdAt = datetime.now()
+    updatedAt = datetime.now()
 
-    print("add")
+    data_manager.new_expense(description, amount, status, necessary, category, createdAt, updatedAt)
 
 
 @app.command()
-def update(expense):
+def update(
+    expense: str = typer.Argument(..., help="Name/description of the expense to update"),
+    description: str = typer.Option(None, "--description", "--desc", "--d"),
+    amount: str = typer.Option(None, "--amount", "--a"),
+    status: str = typer.Option(Status.done, "--status", "--s"),
+    necessary: bool = typer.Option(None, "--necessary", "--n"),
+    category: Category = typer.Option(Category.other, "--category", "-c"),
+):
     """Update an expense."""
 
-    print("update")
+    updatedAt = datetime.now()
+
+    data_manager.update_expense(expense, description, amount, status, necessary, category, updatedAt)
 
 
 @app.command()
@@ -54,6 +72,7 @@ def list_expenses(
 ):
     """List all expenses."""
 
+    print("Expenses")
 
 
 if __name__ == "__main__":
