@@ -1,62 +1,63 @@
-import typer
 from enum import Enum
-from datetime import datetime, date
+from datetime import datetime
+
+import typer
 
 import src.data_manager as data_manager
 
 app = typer.Typer(no_args_is_help=True)
 
 class Status(str, Enum):
-    planned = "planned"
-    in_progress = "in_progress"
-    done = "done"
+    PLANNED = "planned"
+    IN_PROGRESS = "in_progress"
+    DONE = "done"
 
 class Category(str, Enum):
-    food = "food"
-    transport = "transport"
-    entertainment = "entertainment"
-    learning = "learning"
-    subscription = "subscription"
-    other = "other"
+    FOOD = "food"
+    TRANSPORT = "transport"
+    ENTERTAINMENT = "entertainment"
+    LEARNING = "learning"
+    SUBSCRIPTION = "subscription"
+    OTHER = "other"
 
-class Time_window(str, Enum):
-    hour = "hour"
-    day = "day"
-    week = "week"
-    month = "month"
-    year = "year"
-    ever = "ever"
+class TimeWindow(str, Enum):
+    HOUR = "hour"
+    DAY = "day"
+    WEEK = "week"
+    MONTH = "month"
+    YEAR = "year"
+    EVER = "ever"
 
 @app.command()
 def add(
-    description: str = typer.Argument(..., help="Description of the expense"),
+    name: str = typer.Argument(..., help="Name of the expense"),
     amount: str = typer.Argument(..., help="Amount spent"),
-    status: str = typer.Option(Status.done, "--status", "--s"),
+    status: str = typer.Option(Status.DONE, "--status", "--s"), #DONE is the default state
     necessary: bool = typer.Argument(..., help="Whether the expense was necessary"),
-    category: Category = typer.Option(Category.other, "--category", "-c"),
+    category: Category = typer.Option(Category.OTHER, "--category", "-c"), #OTHER is the default state
 ):
     """Add an expense to the tracker."""
 
-    createdAt = datetime.now()
-    updatedAt = datetime.now()
+    created_at = datetime.now()
+    updated_at = datetime.now()
 
-    data_manager.new_expense(description, amount, status, necessary, category, createdAt, updatedAt)
+    data_manager.new_expense(name, amount, status, necessary, category, created_at, updated_at)
 
 
 @app.command()
 def update(
-    expense: str = typer.Argument(..., help="Name/description of the expense to update"),
-    description: str = typer.Option(None, "--description", "--desc", "--d"),
+    expense_id: str = typer.Argument(..., help="Id of the expense to update"),
+    name: str = typer.Option(None, "--name", "--n"),
     amount: str = typer.Option(None, "--amount", "--a"),
-    status: str = typer.Option(Status.done, "--status", "--s"),
+    status: str = typer.Option(Status.DONE, "--status", "--s"),
     necessary: bool = typer.Option(None, "--necessary", "--n"),
-    category: Category = typer.Option(Category.other, "--category", "-c"),
+    category: Category = typer.Option(Category.OTHER, "--category", "-c"),
 ):
     """Update an expense."""
 
-    updatedAt = datetime.now()
+    updated_at = datetime.now()
 
-    data_manager.update_expense(expense, description, amount, status, necessary, category, updatedAt)
+    data_manager.update_expense(expense_id, name, amount, status, necessary, category, updated_at)
 
 
 @app.command()
@@ -68,7 +69,7 @@ def delete(expense):
 
 @app.command()
 def list_expenses(
-    time_window: Time_window = typer.Argument(..., help="The time window of the listed expenses (hour, day, week, month, year, ever)")
+    time_window: TimeWindow = typer.Argument(..., help="The time window of the listed expenses (hour, day, week, month, year, ever)")
 ):
     """List all expenses."""
 
