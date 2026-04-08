@@ -33,8 +33,8 @@ def add(
     name: str = typer.Argument(..., help="Name of the expense"),
     amount: str = typer.Argument(..., help="Amount spent"),
     status: str = typer.Option(Status.DONE, "--status", "--s"), #DONE is the default state
-    necessary: bool = typer.Argument(..., help="Whether the expense was necessary"),
     category: Category = typer.Option(Category.OTHER, "--category", "-c"), #OTHER is the default state
+    necessary: bool = typer.Argument(..., help="Whether the expense was necessary"),
 ):
     """Add an expense to the tracker."""
 
@@ -50,14 +50,14 @@ def update(
     name: str = typer.Option(None, "--name", "--n"),
     amount: str = typer.Option(None, "--amount", "--a"),
     status: str = typer.Option(Status.DONE, "--status", "--s"),
-    necessary: bool = typer.Option(None, "--necessary", "--n"),
     category: Category = typer.Option(Category.OTHER, "--category", "-c"),
+    necessary: bool = typer.Option(None, "--necessary", "--n"),
 ):
     """Update an expense."""
 
     updated_at = datetime.now()
 
-    data_manager.update_expense(expense_id, name, amount, status, necessary, category, updated_at)
+    data_manager.update_expense(expense_id, name, amount, status, category, necessary, updated_at)
 
 
 @app.command()
