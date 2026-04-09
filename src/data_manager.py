@@ -13,7 +13,7 @@ cursor.execute("""
         category    TEXT,
         necessary   TEXT    NOT NULL,
         created_date        TEXT    NOT NULL,
-        updated_date        TEXT    NOT NULL,
+        updated_date        TEXT    NOT NULL
     )
 """)
 conn.commit()
@@ -23,7 +23,7 @@ def new_expense(name, amount, status, necessary, category, created_date, updated
     """Add the new expense to the database."""
 
     cursor.execute(
-        "INSERT INTO expenses (name, amount, status, necessary, category, created_date, updated_date) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO expenses (name, amount, status, necessary, category, created_date, updated_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         (name, amount, status, necessary, category, created_date, updated_date)
     )
 
@@ -93,9 +93,23 @@ def delete_expense(expense_id):
 
     conn.commit()
 
-def list_expenses(start_date, end_date, category, necessary):
+def list_expenses(time_window, category, necessary, creation_date):
     """List all the expenses within the specified timeframe."""
 
     # SELECT all expenses where created_time < end_date and > start_date, and that possibly belongs to the same category or necessary
     # Fetch all these expenses
     # Display all info briefly using read_expense
+
+    cursor.execute(
+        "SELECT * FROM expenses "
+        "WHERE created_date < ? "
+        "AND category = ? "
+        "AND necessary = ? "
+        "AND creation_date = ? "
+        "ORDER BY created_date",
+        (time_window, category, necessary, creation_date)
+    )
+    expense_rows = cursor.fetchall
+
+    for expense_row in expense_rows:
+        read_expense(expense_row[0]) # Use ID

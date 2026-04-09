@@ -1,6 +1,7 @@
 from enum import Enum
-from datetime import datetime
+from datetime import datetime, date
 
+import click
 import typer
 
 import src.data_manager as data_manager
@@ -27,6 +28,18 @@ class TimeWindow(str, Enum):
     MONTH = "month"
     YEAR = "year"
     EVER = "ever"
+
+class DateType(click.ParamType):
+    name = "date"
+
+    def convert(self, value, param, ctx):
+        if isinstance(value, date):
+            return value
+        try:
+            return date.fromisoformat(value)  # expects YYYY-MM-DD
+        except ValueError:
+            self.fail(f"'{value}' is not a valid date (expected YYYY-MM-DD)", param, ctx)
+
 
 @app.command()
 def add(
@@ -61,19 +74,22 @@ def update(
 
 
 @app.command()
-def delete(expense):
+def delete(expense_id):
     """Delete an expense from the tracker."""
 
-    print("delete")
+    data_manager.delete_expense(expense_id)
 
 
 @app.command()
 def list_expenses(
-    time_window: TimeWindow = typer.Argument(..., help="The time window of the listed expenses (hour, day, week, month, year, ever)")
+    time_window: TimeWindow = typer.Argument(..., help="The time window of the listed expenses (hour, day, week, month, year, ever)"),
+    category: Category = typer.Option(Category.OTHER, "--category", "--c"),
+    necessary: bool = typer.Option(None, "--necessary", "--n"),
+    creation_date: date = typer.Option(None, "--date", click_type=DateType())
 ):
     """List all expenses."""
 
-    print("Expenses")
+    data_manager.list_expenses(time_window, category, necessary, creation_date)
 
 
 if __name__ == "__main__":
