@@ -1,5 +1,5 @@
 from enum import Enum
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 import click
 import typer
@@ -8,18 +8,22 @@ import src.data_manager as data_manager
 
 app = typer.Typer(no_args_is_help=True)
 
+# The classes for option choices
+
 class Status(str, Enum):
     PLANNED = "planned"
     IN_PROGRESS = "in_progress"
     DONE = "done"
+
 
 class Category(str, Enum):
     FOOD = "food"
     TRANSPORT = "transport"
     ENTERTAINMENT = "entertainment"
     LEARNING = "learning"
-    SUBSCRIPTION = "subscription"
+    PRODUCTIVITY = "productivity"
     OTHER = "other"
+
 
 class TimeWindow(str, Enum):
     HOUR = "hour"
@@ -28,6 +32,25 @@ class TimeWindow(str, Enum):
     MONTH = "month"
     YEAR = "year"
     EVER = "ever"
+
+    # Type hints datetime and None (what the function can return)
+    def cutoff(self) -> datetime | None:
+        """Return the earliest datetime for this window, or None for EVER."""
+        now = datetime.now()
+        match self:
+            case TimeWindow.HOUR:
+                return now - timedelta(hours=1)
+            case TimeWindow.DAY:
+                return now - timedelta(days=1)
+            case TimeWindow.WEEK:
+                return now - timedelta(weeks=1)
+            case TimeWindow.MONTH:
+                return now - timedelta(days=30)
+            case TimeWindow.YEAR:
+                return now - timedelta(days=365)
+            case TimeWindow.EVER:
+                return None
+
 
 class DateType(click.ParamType):
     name = "date"
@@ -38,23 +61,33 @@ class DateType(click.ParamType):
         try:
             return date.fromisoformat(value)  # expects YYYY-MM-DD
         except ValueError:
-            self.fail(f"'{value}' is not a valid date (expected YYYY-MM-DD)", param, ctx)
+            self.fail(
+                f"'{value}' is not a valid date (expected YYYY-MM-DD)", param, ctx
+            )
 
+
+# The CLI commands
 
 @app.command()
 def add(
     name: str = typer.Argument(..., help="Name of the expense"),
     amount: str = typer.Argument(..., help="Amount spent"),
-    status: str = typer.Option(Status.DONE, "--status", "--s"), #DONE is the default state
-    category: Category = typer.Option(Category.OTHER, "--category", "-c"), #OTHER is the default state
-    necessary: bool = typer.Argument(..., help="Whether the expense was necessary"),
+    status: str = typer.Option(
+        Status.DONE, "--status", "--s"
+    ),  # DONE is the default state
+    category: Category = typer.Option(
+        None, "--category", "-c"
+    ),  # OTHER is the default state
+    necessity: bool = typer.Argument(..., help="Whether the expense was necessary"),
 ):
     """Add an expense to the tracker."""
 
-    created_at = datetime.now()
-    updated_at = datetime.now()
+    creation_date = datetime.now()
+    update_date = datetime.now()
 
-    data_manager.new_expense(name, amount, status, necessary, category, created_at, updated_at)
+    data_manager.new_expense(
+        name, amount, status, necessity, category, creation_date, update_date
+    )
 
 
 @app.command()
@@ -64,13 +97,15 @@ def update(
     amount: str = typer.Option(None, "--amount", "--a"),
     status: str = typer.Option(Status.DONE, "--status", "--s"),
     category: Category = typer.Option(Category.OTHER, "--category", "-c"),
-    necessary: bool = typer.Option(None, "--necessary", "--n"),
+    necessity: bool = typer.Option(None, "--necessary", "--n"),
 ):
     """Update an expense."""
 
-    updated_at = datetime.now()
+    update_date = datetime.now()
 
-    data_manager.update_expense(expense_id, name, amount, status, category, necessary, updated_at)
+    data_manager.update_expense(
+        expense_id, name, amount, status, category, necessity, update_date
+    )
 
 
 @app.command()
@@ -82,14 +117,17 @@ def delete(expense_id):
 
 @app.command()
 def list_expenses(
-    time_window: TimeWindow = typer.Argument(..., help="The time window of the listed expenses (hour, day, week, month, year, ever)"),
-    category: Category = typer.Option(Category.OTHER, "--category", "--c"),
-    necessary: bool = typer.Option(None, "--necessary", "--n"),
-    creation_date: date = typer.Option(None, "--date", click_type=DateType())
+    time_window: TimeWindow = typer.Argument(
+        ...,
+        help="The time window of the listed expenses (hour, day, week, month, year, ever)",
+    ),
+    category: Category = typer.Option(None, "--category", "--c"),
+    necessity: bool = typer.Option(None, "--necessary", "--n"),
+    creation_date: date = typer.Option(None, "--date", click_type=DateType()),
 ):
     """List all expenses."""
 
-    data_manager.list_expenses(time_window, category, necessary, creation_date)
+    data_manager.list_expenses(time_window.cutoff(), category, necessity, creation_date)
 
 
 if __name__ == "__main__":

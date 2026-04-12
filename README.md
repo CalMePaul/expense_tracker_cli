@@ -68,6 +68,12 @@ Install the current project dependencies:
 python -m pip install pytest black pylint typer matplotlib plotly
 ```
 
+Install the package in editable mode to enable the `et` command:
+
+```powershell
+pip install -e .
+```
+
 ## Goals
 
 This project is intended to become a simple but well-structured combination of:
