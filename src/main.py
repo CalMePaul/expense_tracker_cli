@@ -82,6 +82,9 @@ def add(
 ):
     """Add an expense to the tracker."""
 
+    name = name.strip() or None
+    amount = amount.strip() or None
+    status = status.strip() or None
     creation_date = datetime.now()
     update_date = datetime.now()
 
@@ -101,6 +104,9 @@ def update(
 ):
     """Update an expense."""
 
+    name = name.strip() or None if name is not None else None
+    amount = amount.strip() or None if amount is not None else None
+    status = status.strip() or None if status is not None else None
     update_date = datetime.now()
 
     data_manager.update_expense(

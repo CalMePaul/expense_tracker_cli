@@ -2,3 +2,4 @@
 *.egg-info
 expenses.db
 __pycache__/
+.pytest_cache/
