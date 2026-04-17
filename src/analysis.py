@@ -29,7 +29,8 @@ def monthly_spending_by_day():
     # then create new row in dictionary (or retrieve it if existent), and add the amount to it
     for expense in expenses_from_month:
         date = expense[6]
-        date_as_day = date.date()
+        # We need to remove the time component, and then make 
+        date_as_day = datetime.strptime(date, "%Y-%m-%d").date()
         amount_spent = expense[2]
 
         spending_by_day[date_as_day] += amount_spent
