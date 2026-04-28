@@ -5,10 +5,12 @@ import click
 import typer
 
 import src.data_manager as data_manager
+import src.analysis as analysis
 
 app = typer.Typer(no_args_is_help=True)
 
 # The classes for option choices
+
 
 class Status(str, Enum):
     PLANNED = "planned"
@@ -22,6 +24,7 @@ class Category(str, Enum):
     ENTERTAINMENT = "entertainment"
     LEARNING = "learning"
     PRODUCTIVITY = "productivity"
+    HEALTH = "health"
     OTHER = "other"
 
 
@@ -66,25 +69,31 @@ class DateType(click.ParamType):
             )
 
 
+# Dictionary for helping translate time window words into numbers of days
+time_windows_in_days = {"week": 7, "month": 31}
+
+
 # The CLI commands
+
 
 @app.command()
 def add(
     name: str = typer.Argument(..., help="Name of the expense"),
-    amount: str = typer.Argument(..., help="Amount spent"),
+    amount: int = typer.Argument(..., help="Amount spent"),
     status: str = typer.Option(
         Status.DONE, "--status", "--s"
     ),  # DONE is the default state
     category: Category = typer.Option(
-        None, "--category", "-c"
+        None, "--category", "--c"
     ),  # OTHER is the default state
     necessity: bool = typer.Argument(..., help="Whether the expense was necessary"),
 ):
     """Add an expense to the tracker."""
 
-    name = name.strip() or None
-    amount = amount.strip() or None
-    status = status.strip() or None
+    # Apply lowercase so user doesn't have issues after forgetting which case he used in naming
+    name = name.strip().lower() or None
+    amount = amount or None
+    status = status.strip().lower() or None
     creation_date = datetime.now()
     update_date = datetime.now()
 
@@ -97,16 +106,16 @@ def add(
 def update(
     expense_id: str = typer.Argument(..., help="Id of the expense to update"),
     name: str = typer.Option(None, "--name", "--n"),
-    amount: str = typer.Option(None, "--amount", "--a"),
+    amount: int = typer.Option(None, "--amount", "--a"),
     status: str = typer.Option(Status.DONE, "--status", "--s"),
-    category: Category = typer.Option(Category.OTHER, "--category", "-c"),
+    category: Category = typer.Option(Category.OTHER, "--category", "--c"),
     necessity: bool = typer.Option(None, "--necessary", "--n"),
 ):
     """Update an expense."""
 
-    name = name.strip() or None if name is not None else None
-    amount = amount.strip() or None if amount is not None else None
-    status = status.strip() or None if status is not None else None
+    name = name.strip().lower() if name is not None else None
+    amount = amount if amount is not None else None
+    status = status.strip().lower() if status is not None else None
     update_date = datetime.now()
 
     data_manager.update_expense(
@@ -122,7 +131,7 @@ def delete(expense_id):
 
 
 @app.command()
-def list_expenses(
+def list(
     time_window: TimeWindow = typer.Argument(
         ...,
         help="The time window of the listed expenses (hour, day, week, month, year, ever)",
@@ -133,7 +142,34 @@ def list_expenses(
 ):
     """List all expenses."""
 
-    data_manager.list_expenses(time_window.cutoff(), category, necessity, creation_date)
+    category = category.strip().lower() if category is not None else None
+    creation_date = creation_date.strip().lower() if creation_date is not None else None
+
+    data_manager.list_expenses(
+        time_window.cutoff(), category, necessity, creation_date
+    )
+
+
+@app.command()
+def plot_daily(
+    time_window: str = typer.Argument(..., help="Time window must be a week or a month")
+):
+    """Start plotting daily spending over a week or a month."""
+    if time_window.lower() == "week" or time_window.lower() == "month":
+        analysis.daily_spending_over_time(time_windows_in_days[time_window])
+    else:
+        print("The time window provided for the plot was neither a week or a month.")
+
+
+@app.command()
+def plot_by_category(
+    time_window: str = typer.Argument(..., help="Time window must be a week or a month")
+):
+    """Start plotting spending by category over a week or a month."""
+    if time_window.lower() == "week" or time_window.lower() == "month":
+        analysis.category_spending_over_time(time_windows_in_days[time_window])
+    else:
+        print("The time window provided for the plot was neither a week or a month.")
 
 
 if __name__ == "__main__":

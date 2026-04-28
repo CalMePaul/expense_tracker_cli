@@ -3,6 +3,7 @@ import pytest
 
 import src.data_manager as data_manager
 
+
 @pytest.fixture
 def temp_database(tmp_path, monkeypatch):
     """Create a temporary sqlite database for pure testing purposes."""
@@ -24,12 +25,15 @@ def temp_database(tmp_path, monkeypatch):
     """)
     conn.commit()
 
-    monkeypatch.setattr(data_manager, "conn", conn) # Replace data manager conn with fake conn
-    monkeypatch.setattr(data_manager, "cursor", cursor) # Same for cursor
+    monkeypatch.setattr(
+        data_manager, "conn", conn
+    )  # Replace data manager conn with fake conn
+    monkeypatch.setattr(data_manager, "cursor", cursor)  # Same for cursor
 
-    yield conn # Yield upholds the function while the database is being accessed
+    yield conn  # Yield upholds the function while the database is being accessed
 
     conn.close()
+
 
 # Unit tests covering the new_expense function
 def test_new_expense_for_correct_values(temp_database):
@@ -47,29 +51,67 @@ def test_new_expense_for_correct_values(temp_database):
     data_manager.new_expense(**expense)
 
     cursor = temp_database.cursor()
-    cursor.execute(
-        "SELECT * FROM expenses WHERE id = ?",
-        (1,)
-    )
+    cursor.execute("SELECT * FROM expenses WHERE id = ?", (1,))
 
     subscription_row = cursor.fetchone()
 
-    assert subscription_row[1] == expense["name"] # Check for same name
-    assert subscription_row[2] == expense["amount"] # Check for same amount
+    assert subscription_row[1] == expense["name"]  # Check for same name
+    assert subscription_row[2] == expense["amount"]  # Check for same amount
     assert subscription_row[3] == expense["status"]
     assert subscription_row[4] == expense["category"]
     assert subscription_row[5] == expense["necessity"]
     assert subscription_row[6] == expense["creation_date"]
     assert subscription_row[7] == expense["update_date"]
 
+
 def test_autoincrement_after_few_expenses(temp_database):
     """Test that IDs autoincrement correctly after multiple inserts."""
     expenses = [
-        {"name": "Shoes", "amount": 150.0, "status": "DONE", "category": "Clothing", "necessity": "True", "creation_date": "2026-01-01", "update_date": "2026-01-01"},
-        {"name": "Burger", "amount": 12.0, "status": "DONE", "category": "Food", "necessity": "True", "creation_date": "2026-01-02", "update_date": "2026-01-02"},
-        {"name": "Toothpaste", "amount": 5.0, "status": "DONE", "category": "Hygiene", "necessity": "True", "creation_date": "2026-01-03", "update_date": "2026-01-03"},
-        {"name": "Bike pedals", "amount": 40.0, "status": "DONE", "category": "Sport", "necessity": "False", "creation_date": "2026-01-04", "update_date": "2026-01-04"},
-        {"name": "Book", "amount": 25.0, "status": "DONE", "category": "Education", "necessity": "False", "creation_date": "2026-01-05", "update_date": "2026-01-05"},
+        {
+            "name": "Shoes",
+            "amount": 150.0,
+            "status": "DONE",
+            "category": "Clothing",
+            "necessity": "True",
+            "creation_date": "2026-01-01",
+            "update_date": "2026-01-01",
+        },
+        {
+            "name": "Burger",
+            "amount": 12.0,
+            "status": "DONE",
+            "category": "Food",
+            "necessity": "True",
+            "creation_date": "2026-01-02",
+            "update_date": "2026-01-02",
+        },
+        {
+            "name": "Toothpaste",
+            "amount": 5.0,
+            "status": "DONE",
+            "category": "Hygiene",
+            "necessity": "True",
+            "creation_date": "2026-01-03",
+            "update_date": "2026-01-03",
+        },
+        {
+            "name": "Bike pedals",
+            "amount": 40.0,
+            "status": "DONE",
+            "category": "Sport",
+            "necessity": "False",
+            "creation_date": "2026-01-04",
+            "update_date": "2026-01-04",
+        },
+        {
+            "name": "Book",
+            "amount": 25.0,
+            "status": "DONE",
+            "category": "Education",
+            "necessity": "False",
+            "creation_date": "2026-01-05",
+            "update_date": "2026-01-05",
+        },
     ]
 
     for expense in expenses:
@@ -85,7 +127,9 @@ def test_autoincrement_after_few_expenses(temp_database):
 # Unit tests covering the test case of the update_expense function
 def test_update_expense_name(temp_database):
     """Test that updating the name changes only the name."""
-    data_manager.new_expense("Old name", 20.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01")
+    data_manager.new_expense(
+        "Old name", 20.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01"
+    )
     data_manager.update_expense(1, "New name", None, None, None, None, "2026-01-02")
 
     cursor = temp_database.cursor()
@@ -98,7 +142,9 @@ def test_update_expense_name(temp_database):
 
 def test_update_expense_amount(temp_database):
     """Test that updating the amount changes only the amount."""
-    data_manager.new_expense("Shoes", 50.0, "DONE", "True", "Clothing", "2026-01-01", "2026-01-01")
+    data_manager.new_expense(
+        "Shoes", 50.0, "DONE", "True", "Clothing", "2026-01-01", "2026-01-01"
+    )
     data_manager.update_expense(1, None, 99.0, None, None, None, "2026-01-02")
 
     cursor = temp_database.cursor()
@@ -111,8 +157,12 @@ def test_update_expense_amount(temp_database):
 
 def test_update_expense_category(temp_database):
     """Test that updating the category changes only the category."""
-    data_manager.new_expense("Book", 25.0, "DONE", "True", "Education", "2026-01-01", "2026-01-01")
-    data_manager.update_expense(1, None, None, None, "Entertainment", None, "2026-01-02")
+    data_manager.new_expense(
+        "Book", 25.0, "DONE", "True", "Education", "2026-01-01", "2026-01-01"
+    )
+    data_manager.update_expense(
+        1, None, None, None, "Entertainment", None, "2026-01-02"
+    )
 
     cursor = temp_database.cursor()
     cursor.execute("SELECT * FROM expenses WHERE id = ?", (1,))
@@ -125,7 +175,9 @@ def test_update_expense_category(temp_database):
 # Unit tests covering the test case of the delete_expense function
 def test_delete_expense_row_gone(temp_database):
     """Test that a deleted expense no longer exists in the database."""
-    data_manager.new_expense("Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01")
+    data_manager.new_expense(
+        "Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01"
+    )
     data_manager.delete_expense(1)
 
     cursor = temp_database.cursor()
@@ -137,8 +189,12 @@ def test_delete_expense_row_gone(temp_database):
 
 def test_delete_expense_other_id_unchanged(temp_database):
     """Test that deleting one row does not affect the ID of another."""
-    data_manager.new_expense("Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01")
-    data_manager.new_expense("Burger", 12.0, "DONE", "True", "Food", "2026-01-02", "2026-01-02")
+    data_manager.new_expense(
+        "Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01"
+    )
+    data_manager.new_expense(
+        "Burger", 12.0, "DONE", "True", "Food", "2026-01-02", "2026-01-02"
+    )
     data_manager.delete_expense(1)
 
     cursor = temp_database.cursor()
@@ -150,6 +206,8 @@ def test_delete_expense_other_id_unchanged(temp_database):
 
 def test_delete_expense_wrong_id_no_crash(temp_database):
     """Test that deleting a non-existent ID does not raise an exception."""
-    data_manager.new_expense("Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01")
+    data_manager.new_expense(
+        "Coffee", 3.0, "DONE", "True", "Food", "2026-01-01", "2026-01-01"
+    )
     data_manager.delete_expense(999)
     assert True

@@ -14,14 +14,14 @@ import src.charts as charts
 conn = sqlite3.connect("src/expenses.db")
 cursor = conn.cursor()
 
-def monthly_spending_by_day():
+
+def daily_spending_over_time(time_window):
     """Fetch spending data from last month, sort by day, and feed it into the chart maker."""
-    time_difference = datetime.now() - timedelta(days=31)
+    # The time_window is a number of days, already transformed in main.py
+    time_difference = datetime.now() - timedelta(days=time_window)
 
     cursor.execute(
-        "SELECT * FROM expenses "
-        "WHERE creation_date >= ?",
-        (time_difference,)
+        "SELECT * FROM expenses " "WHERE creation_date >= ?", (time_difference,)
     )
 
     expenses_from_month = cursor.fetchall()
@@ -32,50 +32,35 @@ def monthly_spending_by_day():
     # Process: get date (column 6) as day, get amount
     # then create new row in dictionary (or retrieve it if existent), and add the amount to it
     for expense in expenses_from_month:
+        # In order for strptime to work, you have to provide the date without time (hours)
         date = expense[6]
-        # We need to remove the time component, and then make
-        date_as_day = datetime.strptime(date, "%Y-%m-%d").date()
+        # We need to transform the date into a datetime instance and then remove the time
+        # Here the format is for dates like: 2026-04-28 17:24:56.412804
+        # The codes are fixed, with Y (year), m (month), d (day), H (hour), M (minute), S (second), f (microsecond)
+        date_as_day = datetime.strptime(date, "%Y-%m-%d %H:%M:%S.%f").date()
         amount_spent = expense[2]
+        print(expense)
+        print(spending_by_day)
+        print(spending_by_day.get(date_as_day, 0))
+        print(amount_spent)
 
-        spending_by_day[date_as_day] = spending_by_day.get(date_as_day, 0) + amount_spent
+        spending_by_day[date_as_day] = (
+            spending_by_day.get(date_as_day, 0) + amount_spent
+        )
+
+        print(spending_by_day)
 
     # Make a list of tuples containing the dict info, then feed it into the DataFrame by columns.
     df = pandas.DataFrame(list(spending_by_day.items()), columns=["Date", "Amount"])
+    charts.expenses_by_time(df, time_window)
 
 
-def weekly_spending_by_day():
-    """Fetch spending data from last week, sort by day, and feed it into the chart maker."""
-    time_difference = datetime.now() - timedelta(days=7)
-
-    cursor.execute(
-        "SELECT * FROM expenses "
-        "WHERE creation_date >= ?",
-        (time_difference,)
-    )
-
-    expenses_from_month = cursor.fetchall()
-    # Dictionary to hold sum of expenses from each day
-    spending_by_day = {}
-
-    # This function sums up the amount spent by each day
-    # Process: get date (column 6) as day, get amount
-    # then create new row in dictionary (or retrieve it if existent), and add the amount to it
-    for expense in expenses_from_month:
-        date = expense[6]
-        # We need to remove the time component, and then make
-        date_as_day = datetime.strptime(date, "%Y-%m-%d").date()
-        amount_spent = expense[2]
-
-        spending_by_day[date_as_day] = spending_by_day.get(date_as_day, 0) + amount_spent
-
-def monthly_spending_by_category():
+def category_spending_over_time(time_window):
     """Fetch spending data from last month, sort by category and feed into chart maker."""
-    time_difference = datetime.now() - timedelta(days=31)
+    time_difference = datetime.now() - timedelta(days=time_window)
 
     cursor.execute(
-        "SELECT * FROM expenses "
-        "WHERE creation_date >= ?",
-        (time_difference,)
+        "SELECT * FROM expenses " "WHERE creation_date >= ?", (time_difference,)
     )
 
     expenses_from_month = cursor.fetchall()
@@ -89,4 +74,12 @@ def monthly_spending_by_category():
         category = expense[4]
         amount_spent = expense[2]
 
-        spending_by_category[category] += amount_spent
+        spending_by_category[category] = (
+            spending_by_category.get(category, 0) + amount_spent
+        )
+
+    # Make a list of tuples containing the dict info, then feed it into the DataFrame by columns.
+    df = pandas.DataFrame(
+        list(spending_by_category.items()), columns=["Category", "Amount"]
+    )
+    charts.expenses_by_category(df, time_window)
