@@ -80,20 +80,20 @@ time_windows_in_days = {"week": 7, "month": 31}
 def add(
     name: str = typer.Argument(..., help="Name of the expense"),
     amount: int = typer.Argument(..., help="Amount spent"),
-    status: str = typer.Option(
+    status: Status = typer.Option(
         Status.DONE, "--status", "--s"
     ),  # DONE is the default state
     category: Category = typer.Option(
-        None, "--category", "--c"
+        Category.OTHER, "--category", "--c"
     ),  # OTHER is the default state
     necessity: bool = typer.Argument(..., help="Whether the expense was necessary"),
 ):
     """Add an expense to the tracker."""
 
-    # Apply lowercase so user doesn't have issues after forgetting which case he used in naming
     name = name.strip().lower() or None
     amount = amount or None
-    status = status.strip().lower() or None
+    status = status.value
+    category = category.value
     creation_date = datetime.now()
     update_date = datetime.now()
 
@@ -107,7 +107,7 @@ def update(
     expense_id: str = typer.Argument(..., help="Id of the expense to update"),
     name: str = typer.Option(None, "--name", "--n"),
     amount: int = typer.Option(None, "--amount", "--a"),
-    status: str = typer.Option(Status.DONE, "--status", "--s"),
+    status: Status = typer.Option(Status.DONE, "--status", "--s"),
     category: Category = typer.Option(Category.OTHER, "--category", "--c"),
     necessity: bool = typer.Option(None, "--necessary", "--n"),
 ):
@@ -115,7 +115,8 @@ def update(
 
     name = name.strip().lower() if name is not None else None
     amount = amount if amount is not None else None
-    status = status.strip().lower() if status is not None else None
+    status = status.value
+    category = category.value
     update_date = datetime.now()
 
     data_manager.update_expense(
@@ -142,7 +143,7 @@ def list(
 ):
     """List all expenses."""
 
-    category = category.strip().lower() if category is not None else None
+    category = category.value if category is not None else None
     creation_date = creation_date.strip().lower() if creation_date is not None else None
 
     data_manager.list_expenses(

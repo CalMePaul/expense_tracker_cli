@@ -15,13 +15,16 @@ conn = sqlite3.connect("src/expenses.db")
 cursor = conn.cursor()
 
 
-def daily_spending_over_time(time_window):
-    """Fetch spending data from last month, sort by day, and feed it into the chart maker."""
+# Internal functions
+
+def _build_daily_df(time_window):
+    """Fetch spending data from last month, sort by day, and return it to the caller function."""
+
     # The time_window is a number of days, already transformed in main.py
     time_difference = datetime.now() - timedelta(days=time_window)
 
     cursor.execute(
-        "SELECT * FROM expenses " "WHERE creation_date >= ?", (time_difference,)
+        "SELECT * FROM expenses WHERE creation_date >= ?", (time_difference,)
     )
 
     expenses_from_month = cursor.fetchall()
@@ -51,16 +54,14 @@ def daily_spending_over_time(time_window):
         print(spending_by_day)
 
     # Make a list of tuples containing the dict info, then feed it into the DataFrame by columns.
-    df = pandas.DataFrame(list(spending_by_day.items()), columns=["Date", "Amount"])
-    charts.expenses_by_time(df, time_window)
+    return pandas.DataFrame(list(spending_by_day.items()), columns=["Date", "Amount"])
 
-
-def category_spending_over_time(time_window):
-    """Fetch spending data from last month, sort by category and feed into chart maker."""
+def _build_category_df(time_window):
+    """Fetch spending data from last month, sort by category and return it to the caller."""
     time_difference = datetime.now() - timedelta(days=time_window)
 
     cursor.execute(
-        "SELECT * FROM expenses " "WHERE creation_date >= ?", (time_difference,)
+        "SELECT * FROM expenses WHERE creation_date >= ?", (time_difference,)
     )
 
     expenses_from_month = cursor.fetchall()
@@ -79,7 +80,22 @@ def category_spending_over_time(time_window):
         )
 
     # Make a list of tuples containing the dict info, then feed it into the DataFrame by columns.
-    df = pandas.DataFrame(
+    return pandas.DataFrame(
         list(spending_by_category.items()), columns=["Category", "Amount"]
     )
+
+
+# Public API functions
+
+def daily_spending_over_time(time_window):
+    """Feed daily spending data into chart maker."""
+
+    df = _build_daily_df(time_window)
+    charts.expenses_by_time(df, time_window)
+
+
+def category_spending_over_time(time_window):
+    """Feed spending data by category into chart maker."""
+
+    df = _build_category_df(time_window)
     charts.expenses_by_category(df, time_window)
