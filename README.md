@@ -35,7 +35,6 @@ Example meanings:
 - SQLite
 - Typer
 - Pytest
-- Matplotlib
 - Plotly
 
 ## Project Structure

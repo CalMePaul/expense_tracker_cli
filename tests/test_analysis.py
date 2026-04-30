@@ -1,6 +1,5 @@
 import sqlite3
 import pytest
-from datetime import date
 
 import src.analysis as analysis
 
@@ -47,8 +46,10 @@ def temp_database(tmp_path, monkeypatch):
 # First test case: multiple normal expenses in same category
 # We will use already established expense rows so they can be reused
 def test_build_daily_df_two_expenses_same_day_are_summed(temp_database):
+    """Test whether two expenses the same day are summed (length of df, amount)."""
     cursor = temp_database.cursor()
 
+    # Execute the SQL code for each iteration of the list provided as a collection of arguments.
     cursor.executemany(
         "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
@@ -62,12 +63,15 @@ def test_build_daily_df_two_expenses_same_day_are_summed(temp_database):
     df = analysis._build_daily_df(time_window=31)
 
     assert len(df) == 1
+    # Use df.loc to access the 0 row's "Amount" column (int)
     assert df.loc[0, "Amount"] == 50.0
 
-# Multiple normal expenses on different days 
+# Multiple normal expenses on different days
 def test_build_daily_df_two_expenses_different_days_not_summed(temp_database):
+    """Test whether two expenses on different days are not summed (length of df, amount)."""
     cursor = temp_database.cursor()
 
+    # Execute the SQL code for each iteration of the list provided as a collection of arguments.
     cursor.executemany(
         "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         [
@@ -81,12 +85,15 @@ def test_build_daily_df_two_expenses_different_days_not_summed(temp_database):
     df = analysis._build_daily_df(time_window=31)
 
     assert len(df) == 2
+    # Use df.loc to access the 0 row's "Amount" column (int)
     assert df.loc[0, "Amount"] == 10.0
 
 # Expense that didn't cost anything
 def test_build_daily_df_with_free_expense(temp_database):
+    """Test whether a free expense gets added properly to the df."""
     cursor = temp_database.cursor()
 
+    # Execute the SQL code with the provided arguments.
     cursor.execute(
         "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
         ("Coffee", 0, "done", "food", 0, "2026-04-29 10:00:00.000000", "2026-04-29 10:00:00.000000"),
@@ -97,20 +104,105 @@ def test_build_daily_df_with_free_expense(temp_database):
     df = analysis._build_daily_df(time_window=31)
 
     assert len(df) == 1
+    # Use df.loc to access the 0 row's "Amount" column (int)
     assert df.loc[0, "Amount"] == 0
 
-# Expense exactly on the boundary date
-def test_build_daily_df_expense_with_boundary_date(temp_database):
+# Expense outside of boundary date
+def test_build_daily_df_expense_outside_boundary_date_is_excluded(temp_database):
+    """Test whether an expense outside of the boundary date is excluded of the dataframe."""
     cursor = temp_database.cursor()
 
+    # Execute the SQL code with the provided arguments.
     cursor.execute(
         "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
-        ("Coffee", 10, "done", "food", 0, "2026-03-30 00:00:00.000000", "2026-03-30 00:00:00.000000"),
+        ("Coffee", 10, "done", "food", 0, "2026-03-29 00:00:00.000000", "2026-03-29 00:00:00.000000"),
     )
 
     temp_database.commit()
 
     df = analysis._build_daily_df(time_window=31)
 
+    assert len(df) == 0
+
+
+# Unit test for _build_category_df
+
+# Multiple normal expenses in same category
+def test_build_category_df_two_expenses_same_category_are_summed(temp_database):
+    """Test whether two expenses of the same category are summed (length of df, amount)."""
+    cursor = temp_database.cursor()
+
+    # Execute the SQL code for each iteration of the list provided as a collection of arguments.
+    cursor.executemany(
+        "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("Coffee", 10, "done", "food", 0, "2026-04-29 10:00:00.000000", "2026-04-29 10:00:00.000000"),
+            ("Burger", 40, "done", "food", 1, "2026-04-29 12:00:00.000000", "2026-04-29 12:00:00.000000")
+        ]
+    )
+
+    temp_database.commit()
+
+    df = analysis._build_category_df(time_window=31)
+
     assert len(df) == 1
-    assert df.loc[0, "Date"] == date(2026, 3, 30)
+    # Use df.loc to access the 0 row's "Amount" column (int)
+    assert df.loc[0, "Amount"] == 50.0
+
+# Multiple normal expenses in different categories
+def test_build_category_df_two_expenses_different_categories_not_summed(temp_database):
+    """Test whether two expenses in different categories are not summed (length of df, amount)."""
+    cursor = temp_database.cursor()
+
+    # Execute the SQL code for each iteration of the list provided as a collection of arguments.
+    cursor.executemany(
+        "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+            ("Coffee", 10, "done", "food", 0, "2026-04-29 10:00:00.000000", "2026-04-29 10:00:00.000000"),
+            ("Netflix", 40, "done", "entertainment", 1, "2026-04-29 12:00:00.000000", "2026-04-29 12:00:00.000000")
+        ]
+    )
+
+    temp_database.commit()
+
+    df = analysis._build_category_df(time_window=31)
+
+    assert len(df) == 2
+    # Use df.loc to access the 0 row's "Amount" column (int)
+    assert df.loc[0, "Amount"] == 10.0
+
+# Expense with amount = 0
+def test_build_category_df_with_free_expense(temp_database):
+    """Test whether a free expense gets properly registered in df (1 row, but no amount shown)."""
+    cursor = temp_database.cursor()
+
+    # Execute the SQL code with the provided arguments.
+    cursor.execute(
+        "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("Coffee", 0, "done", "food", 0, "2026-04-29 10:00:00.000000", "2026-04-29 10:00:00.000000"),
+    )
+
+    temp_database.commit()
+
+    df = analysis._build_category_df(time_window=31)
+
+    assert len(df) == 1
+    # Use df.loc to access the 0 row's "Amount" column (int)
+    assert df.loc[0, "Amount"] == 0
+
+# Expense outside of boundary date
+def test_build_category_df_expense_outside_boundary_date_is_excluded(temp_database):
+    """Test whether an expense outside of the boundary date is excluded of the dataframe."""
+    cursor = temp_database.cursor()
+
+    # Execute the SQL code with the provided arguments.
+    cursor.execute(
+        "INSERT INTO expenses (name, amount, status, category, necessity, creation_date, update_date) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("Coffee", 10, "done", "food", 0, "2026-03-29 00:00:00.000000", "2026-03-29 00:00:00.000000"),
+    )
+
+    temp_database.commit()
+
+    df = analysis._build_category_df(time_window=31)
+
+    assert len(df) == 0
