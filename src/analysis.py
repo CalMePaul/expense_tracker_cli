@@ -17,6 +17,7 @@ cursor = conn.cursor()
 
 # Internal functions
 
+
 def _build_daily_df(time_window):
     """Fetch spending data from last month, sort by day, and return it to the caller function."""
 
@@ -56,6 +57,7 @@ def _build_daily_df(time_window):
     # Make a list of tuples containing the dict info, then feed it into the DataFrame by columns.
     return pandas.DataFrame(list(spending_by_day.items()), columns=["Date", "Amount"])
 
+
 def _build_category_df(time_window):
     """Fetch spending data from last month, sort by category and return it to the caller."""
     time_difference = datetime.now() - timedelta(days=time_window)
@@ -86,6 +88,7 @@ def _build_category_df(time_window):
 
 
 # Public API functions
+
 
 def daily_spending_over_time(time_window):
     """Feed daily spending data into chart maker."""

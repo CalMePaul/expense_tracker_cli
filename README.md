@@ -2,55 +2,64 @@
 
 Expense Tracker CLI is a command-line application for storing, accessing, and analyzing expenses and purchases. The goal is to make it easier to understand spending patterns while also serving as a practical learning project for Python, SQLite, CLI design, and data visualization.
 
+## Table of contents
+
+- [File Structure](#file-structure)
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Personal Goals](#personal-goals)
+- [Installation](#installation)
+- [License](#license)
+
+## File structure
+
+expense_tracker_cli
+  .vscode/
+    settings.json
+  docs/
+    ARCHITECTURE.md
+  src/
+    __init__.py
+    analysis.py
+    charts.py
+    data_manager.py
+    main.py
+  tests/
+    test_analysis.py
+    test_data_manager.py
+  .gitignore
+  .pylintrc
+  LICENSE
+  pyproject.toml
+  README.md
+
+## Tech stack
+
+- Python 3.14.2
+- Typer 0.24.1
+- Plotly 6.6.0
+- Pandas 3.0.2
+- Pytest 9.0.2
+- Rich 14.3.3
+
 ## Features
 
-- Create, read, update, and delete expense records
-- Store expense data with SQLite
-- Analyze spending data
-- Generate charts to visualize spending trends
+- Call the CLI app by typing "et", for expense tracker, in your terminal
+- et --help or et (command) --help for individual properties
+- et add "name" amount true/false --category "category" --status "status"
+- et update id --name "name" --amount amount --necessity true/false --status "status" --category "category"
+- et delete id
+- et list timewindow (with timewindow being "hour" "day" "week" "month" "year" "ever") --> allows for checking id to perform operations on expenses (like update or delete)
+- et plot-daily timewindow (with timewindow being either "week" or "month")
+- et plot-by-category timewindow (with timewindow being either "week" or "month")
 
-## Usage
+## Personal goals
 
-The CLI is intended to be used through the `et` command (`et` stands for "expense tracker"). You add expenses from the terminal and generate reports from the stored data.
-
-Example commands:
-
-```text
-et add "shoes" medium product
-et add "claude subscription" expensive service
-et report monthly-summary
-et report consumption-by-category
-```
-
-Example meanings:
-
-- `et add "shoes" medium product` adds an expense entry for shoes with a medium price level in the product category
-- `et add "claude subscription" expensive service` adds a service expense with a higher price level
-- `et report monthly-summary` generates a monthly spending summary
-- `et report consumption-by-category` generates a category-based spending report
-
-## Tech Stack
-
-- Python
-- SQLite
-- Typer
-- Pytest
-- Plotly
-
-## Project Structure
-
-```text
-expense_tracker_cli/
-  .venv/
-  docs/
-  src/
-  tests/
-  .gitignore
-  LICENSE
-  README.md
-```
-
-As the project grows, `src/` will contain the application code and `tests/` will contain automated tests.
+- Learn how Typer works (useful for advanced CLIs)
+- Learn how to write basic SQL, learn what is SQL injection
+- Get better at plotting charts with plotly and analyzing data with pandas
+- Get better at testing code
+- Get better at writing documentation and comments in code
 
 ## Installation
 
@@ -64,7 +73,7 @@ python -m venv .venv
 Install the current project dependencies:
 
 ```powershell
-python -m pip install pytest black pylint typer matplotlib plotly
+python -m pip install typer plotly pandas pytest rich
 ```
 
 Install the package in editable mode to enable the `et` command:
@@ -73,17 +82,6 @@ Install the package in editable mode to enable the `et` command:
 pip install -e .
 ```
 
-## Goals
-
-This project is intended to become a simple but well-structured combination of:
-
-- command-line interaction
-- SQL data handling with SQLite
-- data analysis
-- data visualization
-
-It is also a learning project focused on improving familiarity with Typer, SQLite, and Python project structure.
-
 ## License
 
-This project is licensed under the terms described in the [LICENSE](/d:/Code/expense_tracker_cli/LICENSE) file.
+MIT License - see [LICENSE](LICENSE) for details.

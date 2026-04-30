@@ -146,9 +146,7 @@ def list(
     category = category.value if category is not None else None
     creation_date = creation_date.strip().lower() if creation_date is not None else None
 
-    data_manager.list_expenses(
-        time_window.cutoff(), category, necessity, creation_date
-    )
+    data_manager.list_expenses(time_window.cutoff(), category, necessity, creation_date)
 
 
 @app.command()
